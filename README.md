@@ -52,6 +52,52 @@ NSLog(@"Video export failed with error: %@ (%d)", encoder.error.localizedDescrip
 
 ```
 
+```swift
+let exporter = SDAVAssetExportSession(asset: asset)!
+exporter.outputFileType = processingParameters.outputFileType.rawValue
+exporter.outputURL = processingParameters.outputUrl
+exporter.videoSettings = [AVVideoCodecKey: AVVideoCodecType.h264,
+AVVideoWidthKey: targetSize.width,
+AVVideoHeightKey: targetSize.height,
+AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: 1024_000,
+AVVideoProfileLevelKey: AVVideoProfileLevelH264High40]]
+exporter.audioSettings = [AVFormatIDKey: kAudioFormatMPEG4AAC,
+AVNumberOfChannelsKey: 1,
+AVSampleRateKey: 44100,
+AVEncoderBitRateKey: 96_000]
+exporter.videoComposition = videoComposition
+
+let dispatchGroup = DispatchGroup()
+dispatchGroup.enter()
+exporter.exportAsynchronously(completionHandler: {
+switch exporter.status {
+case .unknown:
+break
+case .waiting:
+break
+case .exporting:
+break
+case .failed:
+output.result = exporter.status
+output.error = exporter.error
+dispatchGroup.leave()
+case .completed:
+output.result = exporter.status
+output.error = exporter.error
+dispatchGroup.leave()
+case .cancelled:
+output.result = exporter.status
+output.error = exporter.error
+dispatchGroup.leave()
+@unknown default:
+output.result = exporter.status
+output.error = exporter.error
+dispatchGroup.leave()
+}
+})
+_ = dispatchGroup.wait(timeout: .distantFuture)
+```
+
 Licenses
 --------
 
